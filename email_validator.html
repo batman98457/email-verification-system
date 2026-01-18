@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Validator</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; transition: all 0.5s ease; overflow-x: hidden; position: relative; }
+    body.light { background: linear-gradient(135deg, rgb(79,70,229), rgb(147,51,234), rgb(236,72,153)); color: rgb(15,23,42); }
+    body.dark { background: rgb(3,7,18); color: rgb(226,232,240); }
+
+    /* Floating animated gradient layers */
+    body::before, body::after {
+        content: '';
+        position: absolute; top: 0; left: 0; width: 200%; height: 200%;
+        background-size: 400% 400%;
+        z-index: -2;
+        filter: blur(100px);
+        animation: gradientMove 20s linear infinite;
+    }
+    body::before { background: linear-gradient(45deg, #4f46e5, #9333ea, #ec4899, #facc15, #10b981); animation-duration: 15s; z-index: -3; }
+    body::after { background: linear-gradient(135deg, #facc15, #10b981, #3b82f6, #9333ea); animation-duration: 25s; }
+
+    @keyframes gradientMove {
+        0% { background-position: 0% 0%; }
+        50% { background-position: 100% 100%; }
+        100% { background-position: 0% 0%; }
+    }
+
+    .container { width: 100%; max-width: 576px; border-radius: 24px; backdrop-filter: blur(12px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); padding: 32px; animation: slideIn 0.8s ease; transition: all 0.5s ease; position: relative; z-index:1; }
+    body.light .container { background: rgba(255,255,255,0.85); }
+    body.dark .container { background: rgba(15,23,42,0.85); }
+
+    @keyframes slideIn { from { opacity:0; transform: translateY(50px) scale(0.95);} to {opacity:1; transform: translateY(0) scale(1);} }
+
+    /* Header */
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .icon-box { padding: 12px; border-radius: 16px; background: linear-gradient(135deg, #4f46e5, #9333ea); color:white; box-shadow: 0 10px 15px -3px rgba(79,70,229,0.3); display:flex; align-items:center; justify-content:center; animation: bounce 2s infinite; }
+    @keyframes bounce { 0%,100%{ transform: translateY(0);} 50% { transform: translateY(-8px); } }
+    .icon-box i { font-size: 20px; }
+
+    .title { font-size:24px; font-weight:900; letter-spacing:-0.5px; background: linear-gradient(270deg,#4f46e5,#9333ea,#ec4899,#facc15,#10b981); background-size: 500% 500%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation: gradientText 8s ease infinite; }
+    @keyframes gradientText { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+
+    .theme-toggle { padding:8px; border-radius:12px; border:none; background: rgba(226,232,240,0.6); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; transition: all 0.4s ease; color: rgb(15,23,42); }
+    body.dark .theme-toggle { background: rgb(30,41,59); color: rgb(226,232,240); }
+    .theme-toggle:hover { transform: scale(1.2) rotate(20deg); }
+
+    /* Input Section */
+    .input-wrapper { position: relative; margin-bottom: 24px; }
+    .input-icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color: rgb(148,163,184); pointer-events:none; font-size:18px; }
+    input { width:100%; padding:12px 16px 12px 44px; border-radius:12px; border:1px solid rgb(203,213,225); font-size:16px; outline:none; transition: all 0.3s ease; background:white; color: rgb(15,23,42); }
+    body.dark input { background: rgb(15,23,42); border-color: rgb(51,65,85); color: rgb(226,232,240); }
+    input:focus { box-shadow: 0 0 16px 4px rgba(79,70,229,0.6), 0 0 32px 8px rgba(147,51,234,0.4); border-color: transparent; animation: shake 0.3s ease, pulseGlow 1.5s infinite alternate; }
+    @keyframes shake { 0%,100%{transform:translateX(0);} 25%,75%{transform:translateX(-4px);} 50%{transform:translateX(4px);} }
+    @keyframes pulseGlow { 0% { box-shadow: 0 0 8px 2px rgba(79,70,229,0.5); } 100% { box-shadow: 0 0 16px 4px rgba(147,51,234,0.7); } }
+
+    /* Result */
+    .result { display:flex; align-items:center; gap:12px; padding:16px; border-radius:12px; margin-bottom:24px; animation: popIn 0.5s ease; font-weight:600; }
+    @keyframes popIn { from{opacity:0; transform:scale(0.8);} to{opacity:1; transform:scale(1);} }
+    .result.success { background: rgb(220,252,231); color: rgb(20,83,45); }
+    body.dark .result.success { background: rgba(16,185,129,0.2); color: rgb(167,243,208); }
+    .result.error { background: rgb(254,226,226); color: rgb(127,29,29); }
+    body.dark .result.error { background: rgba(239,68,68,0.2); color: rgb(254,202,202); }
+    .result.warning { background: rgb(254,243,199); color: rgb(120,53,15); }
+    body.dark .result.warning { background: rgba(251,191,36,0.2); color: rgb(253,224,71); }
+    .result i { font-size:20px; flex-shrink:0; }
+    .result-text { font-size:14px; }
+
+    /* Domains Section */
+    .domains-section { margin-bottom:24px; }
+    .domains-title { display:flex; align-items:center; gap:8px; font-weight:700; margin-bottom:12px; font-size:14px; color: rgb(71,85,105); }
+    body.dark .domains-title { color: rgb(148,163,184); }
+    .domains-list { display:flex; flex-wrap:wrap; gap:8px; }
+    .domain-tag { padding:8px 12px; border-radius:9999px; font-size:12px; font-weight:600; background: rgb(224,231,255); color: rgb(55,48,163); transition: all 0.3s ease; cursor:pointer; animation: floatTags 6s ease-in-out infinite; }
+    .domain-tag:hover { transform: scale(1.15) translateY(-3px); box-shadow: 0 5px 15px rgba(79,70,229,0.4); }
+    body.dark .domain-tag { background: rgb(30,27,75); color: rgb(165,180,252); }
+    @keyframes floatTags { 0% { transform: translateY(0); } 50% { transform: translateY(-4px); } 100% { transform: translateY(0); } }
+
+    /* Footer */
+    .footer { text-align:center; font-size:12px; color: rgb(100,116,139); display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:20px; animation: fadeUp 1s ease; }
+    body.dark .footer { color: rgb(100,116,139); }
+    @keyframes fadeUp { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+
+    /* Presenters Section */
+    .presenters-section { border-top:1px solid rgb(203,213,225); padding-top:20px; text-align:center; animation: fadeUp 1s ease; }
+    body.dark .presenters-section { border-top-color: rgb(51,65,85); }
+    .presenters-label { font-size:12px; font-weight:600; color: rgb(71,85,105); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+    body.dark .presenters-label { color: rgb(148,163,184); }
+    .presenters-names { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+    .presenter-name { padding:6px 12px; background: linear-gradient(135deg, rgba(79,70,229,0.1), rgba(147,51,234,0.1)); border:1px solid rgb(79,70,229); border-radius:20px; font-size:13px; font-weight:500; color: rgb(79,70,229); transition: all 0.3s ease; animation: floatPresenter 4s ease-in-out infinite; }
+    .presenter-name:hover { transform: scale(1.05); box-shadow: 0 0 10px rgba(79,70,229,0.4); }
+    body.dark .presenter-name { background: linear-gradient(135deg, rgba(79,70,229,0.2), rgba(147,51,234,0.2)); border-color: rgb(129,140,248); color: rgb(165,180,252); }
+    
+    .presenter-name.fire { background: linear-gradient(135deg, #ff4500, #ff8c00, #ffd700); border-color: #ff4500; color: white; font-weight: 700; animation: fireGlow 2s ease-in-out infinite, floatPresenter 4s ease-in-out infinite; }
+    body.dark .presenter-name.fire { background: linear-gradient(135deg, #ff4500, #ff8c00, #ffd700); border-color: #ff6347; }
+    @keyframes fireGlow { 0%, 100% { box-shadow: 0 0 10px #ff4500, 0 0 20px #ff6347; } 50% { box-shadow: 0 0 20px #ff4500, 0 0 30px #ff6347, 0 0 40px #ffd700; } }
+
+    @keyframes floatPresenter { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+    /* Responsive */
+    @media (max-width:640px){ .container{padding:24px;} .title{font-size:20px;} input{padding-top:11px; padding-bottom:11px;} }
+</style>
+</head>
+<body class="light">
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <div class="icon-box"><i class="fas fa-envelope"></i></div>
+            <h1 class="title">Email Validator</h1>
+        </div>
+        <button class="theme-toggle" id="themeBtn"><i class="fas fa-moon"></i></button>
+    </div>
+
+    <div class="input-wrapper">
+        <i class="fas fa-envelope input-icon"></i>
+        <input type="email" id="emailInput" placeholder="example@gmail.com" autocomplete="off">
+    </div>
+
+    <div id="resultDiv" style="display:none;"></div>
+
+    <div class="domains-section">
+        <h3 class="domains-title"><i class="fas fa-shield-alt"></i> Supported Domains</h3>
+        <div class="domains-list" id="domainsList"></div>
+    </div>
+
+    <div class="footer"><i class="fas fa-sparkles"></i> <span>Mini Project • Regex Based Validation</span> <i class="fas fa-code"></i></div>
+
+    <div class="presenters-section">
+        <div class="presenters-label">Presented by</div>
+        <div class="presenters-names">
+            <div class="presenter-name fire">🔥 Chinmay 🔥</div>
+            <div class="presenter-name">Ravi Kumar</div>
+            <div class="presenter-name">Samarth</div>
+            <div class="presenter-name">Vishwanath</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const validDomains = ["gmail.com","yahoo.com","outlook.com","hotmail.com","icloud.com","protonmail.com"];
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const emailInput = document.getElementById("emailInput");
+    const resultDiv = document.getElementById("resultDiv");
+    const themeBtn = document.getElementById("themeBtn");
+    const domainsList = document.getElementById("domainsList");
+    const body = document.body;
+
+    validDomains.forEach(domain=>{
+        const span = document.createElement("span");
+        span.className = "domain-tag";
+        span.textContent = domain;
+        domainsList.appendChild(span);
+    });
+
+    function validate(value){
+        if(!value.trim()){ showResult("Please enter an email address","warning"); return; }
+        if(!emailRegex.test(value)){ showResult("Invalid email format","error"); return; }
+        const domain = value.split("@")[1];
+        if(!validDomains.includes(domain.toLowerCase())){ showResult("Domain not supported","error"); return; }
+        showResult("Email looks valid","success");
+        launchConfetti();
+    }
+
+    function showResult(text,type){
+        resultDiv.innerHTML = `<div class="result ${type}"><i class="fas fa-${type==="success"?"check-circle":type==="error"?"times-circle":"exclamation-triangle"}"></i><span class="result-text">${text}</span></div>`;
+        resultDiv.style.display = "flex";
+    }
+
+    emailInput.addEventListener("input",(e)=>{ validate(e.target.value); });
+
+    themeBtn.addEventListener("click",()=>{
+        body.classList.toggle("dark");
+        body.classList.toggle("light");
+        const icon = themeBtn.querySelector("i");
+        if(body.classList.contains("dark")) icon.className="fas fa-sun";
+        else icon.className="fas fa-moon";
+    });
+
+    function launchConfetti(){
+        const duration = 2 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity:35, spread:360, ticks:80, zIndex:1000, shapes:['circle','square','star','heart'] };
+        function randomInRange(min,max){ return Math.random()*(max-min)+min; }
+        const interval = setInterval(function(){
+            const timeLeft = animationEnd-Date.now();
+            if(timeLeft<=0) return clearInterval(interval);
+            const particleCount = 60 * (timeLeft/duration);
+            confetti(Object.assign({},defaults,{particleCount, origin:{x:randomInRange(0,1), y:Math.random()-0.2}, gravity: Math.random()*0.5+0.3, scalar: Math.random()*0.5+0.5 }));
+        },200);
+    }
+
+    const confettiScript = document.createElement('script');
+    confettiScript.src='https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js';
+    document.body.appendChild(confettiScript);
+</script>
+</body>
+</html>
